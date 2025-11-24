@@ -1,0 +1,34 @@
+###############################################################################
+# COMMANDS TO RUN ON VM (192.168.68.63)
+###############################################################################
+
+# Connect to VM
+ssh user@192.168.68.63
+
+# Navigate to project and pull latest changes
+cd ~/work-signal
+git pull
+
+# Update .env file with Signal API key (if not already done)
+nano .env
+# Make sure these are set:
+# SIGNAL_API_KEY=your-actual-api-key
+# DJANGO_SECRET_KEY=your-secret-key
+
+# Stop, rebuild, and restart containers
+docker compose down
+docker compose up -d --build
+
+# Run database migrations
+docker compose exec backend python manage.py migrate
+
+# Create superuser (if first time)
+docker compose exec backend python manage.py createsuperuser
+
+# Check logs to verify everything is working
+docker compose logs -f
+
+# Access the application:
+# Frontend: https://work-signal.janne.men
+# Backend API: https://work-signal-api.janne.men
+# Django Admin: https://work-signal-api.janne.men/admin
