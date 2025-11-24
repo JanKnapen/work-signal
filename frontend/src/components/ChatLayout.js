@@ -1,0 +1,230 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Badge,
+  CircularProgress,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Logout as LogoutIcon,
+  AccountCircle,
+  Group as GroupIcon,
+  Person as PersonIcon,
+  Add as AddIcon,
+} from '@mui/icons-material';
+import { AuthContext } from '../contexts/AuthContext';
+import { signalAPI } from '../services/api';
+import ChatView from './ChatView';
+import ProfileView from './ProfileView';
+import NewChatDialog from './NewChatDialog';
+
+const drawerWidth = 320;
+
+function ChatLayout() {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { contactId } = useParams();
+
+  useEffect(() => {
+    loadConversations();
+    // Poll for new messages every 5 seconds
+    const interval = setInterval(loadConversations, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadConversations = async () => {
+    try {
+      const response = await signalAPI.getConversations();
+      setConversations(response.data.conversations || []);
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleConversationClick = (contact) => {
+    navigate(`/chat/${encodeURIComponent(contact.contact_number)}`);
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleNewChat = (contactNumber) => {
+    navigate(`/chat/${encodeURIComponent(contactNumber)}`);
+    setNewChatOpen(false);
+  };
+
+  const drawer = (
+    <Box>
+      <Toolbar>
+        <Typography variant="h6" noWrap component="div">
+          Conversations
+        </Typography>
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton color="inherit" onClick={() => setNewChatOpen(true)}>
+          <AddIcon />
+        </IconButton>
+      </Toolbar>
+      <Divider />
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <List>
+          {conversations.map((conv) => (
+            <ListItem key={conv.id} disablePadding>
+              <ListItemButton
+                selected={contactId === encodeURIComponent(conv.contact_number)}
+                onClick={() => handleConversationClick(conv)}
+              >
+                <ListItemAvatar>
+                  <Avatar>
+                    {conv.is_group ? <GroupIcon /> : <PersonIcon />}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={conv.contact_name || conv.contact_number}
+                  secondary={
+                    conv.last_message_at
+                      ? new Date(conv.last_message_at).toLocaleString()
+                      : 'No messages'
+                  }
+                />
+                {conv.message_count > 0 && (
+                  <Badge badgeContent={conv.message_count} color="primary" />
+                )}
+              </ListItemButton>
+            </ListItem>
+          ))}
+          {conversations.length === 0 && (
+            <ListItem>
+              <ListItemText
+                primary="No conversations"
+                secondary="Start a new chat to begin messaging"
+              />
+            </ListItem>
+          )}
+        </List>
+      )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: 'flex', height: '100vh' }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          ml: { sm: `${drawerWidth}px` },
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { sm: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Work Signal
+          </Typography>
+          <IconButton color="inherit" onClick={() => navigate('/profile')}>
+            <AccountCircle />
+          </IconButton>
+          <IconButton color="inherit" onClick={handleLogout}>
+            <LogoutIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+      <Box
+        component="nav"
+        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+      >
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 0,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <Toolbar />
+        <Routes>
+          <Route path="/" element={
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 64px)' }}>
+              <Typography variant="h6" color="text.secondary">
+                Select a conversation to start messaging
+              </Typography>
+            </Box>
+          } />
+          <Route path="/chat/:contactId" element={<ChatView onRefresh={loadConversations} />} />
+          <Route path="/profile" element={<ProfileView />} />
+        </Routes>
+      </Box>
+      <NewChatDialog
+        open={newChatOpen}
+        onClose={() => setNewChatOpen(false)}
+        onSubmit={handleNewChat}
+      />
+    </Box>
+  );
+}
+
+export default ChatLayout;
