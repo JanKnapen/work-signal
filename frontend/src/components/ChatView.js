@@ -140,13 +140,14 @@ function ChatView({ onRefresh }) {
             {messages.map((msg, index) => {
               const isFirstInGroup =
                 index === 0 || messages[index - 1].sender_number !== msg.sender_number;
+              const isSentByMe = msg.is_outgoing === 1 || msg.is_outgoing === true;
               
               return (
                 <ListItem
                   key={msg.id}
                   sx={{
                     flexDirection: 'column',
-                    alignItems: 'flex-start',
+                    alignItems: isSentByMe ? 'flex-end' : 'flex-start',
                     mb: isFirstInGroup ? 2 : 0.5,
                   }}
                 >
@@ -156,7 +157,7 @@ function ChatView({ onRefresh }) {
                         <PersonIcon sx={{ fontSize: 16 }} />
                       </Avatar>
                       <Typography variant="caption" fontWeight="bold">
-                        {msg.sender_name || msg.sender_number}
+                        {isSentByMe ? 'You' : (msg.sender_name || msg.sender_number)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {formatTimestamp(msg.received_at)}
@@ -168,8 +169,9 @@ function ChatView({ onRefresh }) {
                     sx={{
                       p: 1.5,
                       maxWidth: '70%',
-                      ml: isFirstInGroup ? 4 : 4,
-                      bgcolor: 'white',
+                      ml: isSentByMe ? 0 : (isFirstInGroup ? 4 : 4),
+                      mr: isSentByMe ? (isFirstInGroup ? 4 : 4) : 0,
+                      bgcolor: isSentByMe ? '#e3f2fd' : 'white',
                     }}
                   >
                     <Typography variant="body1">{msg.message_body}</Typography>

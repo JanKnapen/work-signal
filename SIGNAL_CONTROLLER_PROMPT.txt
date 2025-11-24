@@ -1,0 +1,49 @@
+# PROMPT FOR SIGNAL CONTROLLER AI AGENT
+
+I need to modify the Signal Controller to store sent messages in the database so they appear in the SAME conversation as received messages from that contact.
+
+## Current Problem:
+- When I POST to `/send` endpoint, the message is sent via Signal but NOT saved to the database
+- Only RECEIVED messages are stored in the database
+- When sent messages ARE stored, they're stored with MY number as sender, creating a separate "Me" conversation
+- This means sent messages don't appear in the same chat as received messages from that contact
+
+## What I Need:
+Modify the `/send` endpoint so that when a message is successfully sent, it:
+
+### For Individual Messages (phone number):
+1. Stores the sent message in the database with:
+   - `sender_number`: The RECIPIENT's phone number (the "to" field from the request)
+   - `sender_name`: The recipient's contact name
+   - `message_body`: The message text that was sent
+   - `group_id`: NULL
+   - `timestamp`: Current timestamp in milliseconds
+   - `received_at`: Current datetime
+   - **Add a flag field** like `is_outgoing: true` or `message_direction: 'sent'` to distinguish sent vs received
+
+### For Group Messages:
+1. Stores the sent message with:
+   - `sender_number`: My phone number (the Signal Controller's number)
+   - `sender_name`: My contact name or "Me"
+   - `message_body`: The message text
+   - `group_id`: The group ID from the "to" field
+   - `timestamp`: Current timestamp
+   - `received_at`: Current datetime
+   - `is_outgoing: true` or `message_direction: 'sent'`
+
+## Key Point:
+**For individual chats:** Store the sent message AS IF it came FROM the recipient, so it appears in the same conversation thread. Add a flag to know it's actually outgoing.
+
+## Expected Behavior After Fix:
+- Send message to +31612345678
+- Message is sent via Signal ✓
+- Message is stored in DB with sender_number = "+31612345678" and is_outgoing = true ✓
+- GET `/messages?sender=+31612345678` returns BOTH received and sent messages ✓
+- The conversation shows a complete thread with sent and received messages together ✓
+
+## Database Schema Addition:
+Add a column to distinguish sent vs received messages:
+- `is_outgoing` BOOLEAN (0 = received, 1 = sent)
+- OR `message_direction` TEXT ('sent' or 'received')
+
+Please modify the Signal Controller code to implement this functionality.
