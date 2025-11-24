@@ -138,9 +138,13 @@ function ChatView({ onRefresh }) {
         ) : (
           <List>
             {messages.map((msg, index) => {
-              const isFirstInGroup =
-                index === 0 || messages[index - 1].sender_number !== msg.sender_number;
               const isSentByMe = msg.is_outgoing === 1 || msg.is_outgoing === true;
+              const prevMsg = index > 0 ? messages[index - 1] : null;
+              const prevIsSentByMe = prevMsg ? (prevMsg.is_outgoing === 1 || prevMsg.is_outgoing === true) : null;
+              
+              // Group messages by sender (or sent by me status)
+              const isFirstInGroup = index === 0 || (isSentByMe !== prevIsSentByMe) || 
+                                    (!isSentByMe && prevMsg.sender_number !== msg.sender_number);
               
               return (
                 <ListItem
@@ -149,16 +153,24 @@ function ChatView({ onRefresh }) {
                     flexDirection: 'column',
                     alignItems: isSentByMe ? 'flex-end' : 'flex-start',
                     mb: isFirstInGroup ? 2 : 0.5,
+                    px: 2,
                   }}
                 >
-                  {isFirstInGroup && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  {isFirstInGroup && !isSentByMe && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, ml: 1 }}>
                       <Avatar sx={{ width: 24, height: 24 }}>
                         <PersonIcon sx={{ fontSize: 16 }} />
                       </Avatar>
                       <Typography variant="caption" fontWeight="bold">
-                        {isSentByMe ? 'You' : (msg.sender_name || msg.sender_number)}
+                        {msg.sender_name || msg.sender_number}
                       </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatTimestamp(msg.received_at)}
+                      </Typography>
+                    </Box>
+                  )}
+                  {isFirstInGroup && isSentByMe && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, mr: 1 }}>
                       <Typography variant="caption" color="text.secondary">
                         {formatTimestamp(msg.received_at)}
                       </Typography>
@@ -169,9 +181,9 @@ function ChatView({ onRefresh }) {
                     sx={{
                       p: 1.5,
                       maxWidth: '70%',
-                      ml: isSentByMe ? 0 : (isFirstInGroup ? 4 : 4),
-                      mr: isSentByMe ? (isFirstInGroup ? 4 : 4) : 0,
-                      bgcolor: isSentByMe ? '#e3f2fd' : 'white',
+                      bgcolor: isSentByMe ? '#0084ff' : 'white',
+                      color: isSentByMe ? 'white' : 'inherit',
+                      borderRadius: 2,
                     }}
                   >
                     <Typography variant="body1">{msg.message_body}</Typography>

@@ -72,8 +72,20 @@ def messages_list(request):
                     # This is a workaround - ideally Signal Controller should support recipient filter
                     sent_messages = []
                 
-                # Combine and sort by timestamp
-                all_messages = received_messages + sent_messages
+                # Combine and sort by timestamp, remove duplicates
+                # Use a set to track unique message IDs
+                seen_ids = set()
+                all_messages = []
+                
+                for msg in received_messages + sent_messages:
+                    msg_id = msg.get('id')
+                    if msg_id and msg_id not in seen_ids:
+                        seen_ids.add(msg_id)
+                        all_messages.append(msg)
+                    elif not msg_id:
+                        # If no ID, include it anyway (shouldn't happen but be safe)
+                        all_messages.append(msg)
+                
                 all_messages.sort(key=lambda x: x.get('timestamp', 0))
                 
                 data = {'messages': all_messages}
