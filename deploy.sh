@@ -78,8 +78,8 @@ fi
 # Build and start containers
 echo ""
 echo "Step 7: Building and starting Docker containers..."
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose up -d --build
 
 # Wait for containers to be ready
 echo ""
@@ -89,13 +89,13 @@ sleep 10
 # Run Django migrations
 echo ""
 echo "Step 8: Running database migrations..."
-docker-compose exec -T backend python manage.py migrate
+docker compose exec -T backend python manage.py migrate
 
 # Create superuser
 echo ""
 echo "Step 9: Creating Django superuser..."
 echo "You'll need to create an admin user to log in to the application."
-docker-compose exec backend python manage.py createsuperuser
+docker compose exec backend python manage.py createsuperuser
 
 # Show status
 echo ""
@@ -104,16 +104,18 @@ echo "Deployment Complete!"
 echo "=========================================="
 echo ""
 echo "Application URLs:"
-echo "  Frontend: http://192.168.68.63:3000"
-echo "  Backend:  http://192.168.68.63:8000"
-echo "  Admin:    http://192.168.68.63:8000/admin"
+echo "  Frontend: https://work-signal.janne.men"
+echo "  Backend:  https://work-signal-api.janne.men"
+echo "  Admin:    https://work-signal-api.janne.men/admin"
+echo "  Local Frontend: http://192.168.68.63:3000"
+echo "  Local Backend:  http://192.168.68.63:8000"
 echo ""
 echo "To view logs:"
-echo "  docker-compose logs -f"
+echo "  docker compose logs -f"
 echo ""
 echo "To stop the application:"
-echo "  docker-compose down"
+echo "  docker compose down"
 echo ""
 echo "To restart the application:"
-echo "  docker-compose restart"
+echo "  docker compose restart"
 echo ""

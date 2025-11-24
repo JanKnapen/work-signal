@@ -44,7 +44,6 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 # 5. Verify installations
 docker --version
-docker-compose --version
 
 # 6. Install Git
 sudo apt install -y git
@@ -62,31 +61,33 @@ nano .env
 # - DJANGO_SECRET_KEY=generate-a-random-secret-key
 
 # 9. Build and start the application
-docker-compose up -d --build
+docker compose up -d --build
 
 # 10. Wait for containers to start
 sleep 10
 
 # 11. Run database migrations
-docker-compose exec backend python manage.py migrate
+docker compose exec backend python manage.py migrate
 
 # 12. Create Django superuser (follow the prompts)
-docker-compose exec backend python manage.py createsuperuser
+docker compose exec backend python manage.py createsuperuser
 
 # 13. Check container status
-docker-compose ps
+docker compose ps
 
 # 14. View logs (optional)
-docker-compose logs -f
+docker compose logs -f
 
 
 # =============================================================================
 # ACCESS YOUR APPLICATION
 # =============================================================================
 
-# Frontend: http://192.168.68.63:3000
-# Backend API: http://192.168.68.63:8000
-# Django Admin: http://192.168.68.63:8000/admin
+# Frontend: https://work-signal.janne.men
+# Backend API: https://work-signal-api.janne.men
+# Django Admin: https://work-signal-api.janne.men/admin
+# Local Frontend: http://192.168.68.63:3000
+# Local Backend: http://192.168.68.63:8000
 
 
 # =============================================================================
@@ -94,34 +95,34 @@ docker-compose logs -f
 # =============================================================================
 
 # View running containers
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # View logs for specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker compose logs -f backend
+docker compose logs -f frontend
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Rebuild and restart
-docker-compose up -d --build
+docker compose up -d --build
 
 # Execute commands in backend container
-docker-compose exec backend python manage.py migrate
-docker-compose exec backend python manage.py createsuperuser
-docker-compose exec backend python manage.py shell
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createsuperuser
+docker compose exec backend python manage.py shell
 
 # Access backend shell
-docker-compose exec backend bash
+docker compose exec backend bash
 
 # Access frontend shell
-docker-compose exec frontend sh
+docker compose exec frontend sh
 
 
 # =============================================================================
@@ -133,10 +134,10 @@ cd ~/work-signal
 git pull
 
 # Rebuild and restart containers
-docker-compose up -d --build
+docker compose up -d --build
 
 # Run migrations if needed
-docker-compose exec backend python manage.py migrate
+docker compose exec backend python manage.py migrate
 
 
 # =============================================================================
@@ -144,19 +145,19 @@ docker-compose exec backend python manage.py migrate
 # =============================================================================
 
 # If containers won't start, check logs:
-docker-compose logs
+docker compose logs
 
 # If port is already in use:
 sudo lsof -i :8000
 sudo lsof -i :3000
 
 # Stop all containers and remove volumes:
-docker-compose down -v
+docker compose down -v
 
 # Remove all Docker images and rebuild from scratch:
-docker-compose down
+docker compose down
 docker system prune -a
-docker-compose up -d --build
+docker compose up -d --build
 
 
 # =============================================================================
