@@ -40,7 +40,7 @@ def groups_list(request):
 def messages_list(request):
     """
     Get messages with optional filters.
-    Query params: sender, group_id
+    Query params: sender, group_id, contact
     """
     try:
         client = SignalAPIClient()
@@ -54,7 +54,29 @@ def messages_list(request):
             if contact.endswith('='):  # Likely a group ID (base64 encoded)
                 data = client.get_messages(group_id=contact)
             else:
-                data = client.get_messages(sender=contact)
+                # For individual chats, get both received and sent messages
+                # Get messages received from this contact
+                received_data = client.get_messages(sender=contact)
+                received_messages = received_data.get('messages', [])
+                
+                # Get messages sent to this contact (stored with recipient filter if available)
+                try:
+                    sent_data = client.get_messages(recipient=contact)
+                    sent_messages = sent_data.get('messages', [])
+                except:
+                    # If recipient filter not available, get all messages and filter
+                    # by checking if we sent to this contact
+                    all_data = client.get_messages()
+                    all_messages = all_data.get('messages', [])
+                    # Filter for messages where we are the sender and contact is recipient
+                    # This is a workaround - ideally Signal Controller should support recipient filter
+                    sent_messages = []
+                
+                # Combine and sort by timestamp
+                all_messages = received_messages + sent_messages
+                all_messages.sort(key=lambda x: x.get('timestamp', 0))
+                
+                data = {'messages': all_messages}
         else:
             data = client.get_messages(sender=sender, group_id=group_id)
         

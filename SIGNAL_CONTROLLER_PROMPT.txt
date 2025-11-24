@@ -1,49 +1,64 @@
 # PROMPT FOR SIGNAL CONTROLLER AI AGENT
 
-I need to modify the Signal Controller to store sent messages in the database so they appear in the SAME conversation as received messages from that contact.
+I need to modify the Signal Controller to properly track sent messages so they appear in the conversation with the recipient.
 
 ## Current Problem:
-- When I POST to `/send` endpoint, the message is sent via Signal but NOT saved to the database
-- Only RECEIVED messages are stored in the database
-- When sent messages ARE stored, they're stored with MY number as sender, creating a separate "Me" conversation
-- This means sent messages don't appear in the same chat as received messages from that contact
+- When I send a message via POST `/send` to `+31612345678`, it's stored with MY number as sender
+- This creates a separate "Me" conversation instead of appearing in the conversation with `+31612345678`
+- I need sent messages to appear in the SAME conversation as received messages from that contact
 
-## What I Need:
-Modify the `/send` endpoint so that when a message is successfully sent, it:
+## Solution: Add recipient tracking and a new query parameter
 
-### For Individual Messages (phone number):
-1. Stores the sent message in the database with:
-   - `sender_number`: The RECIPIENT's phone number (the "to" field from the request)
-   - `sender_name`: The recipient's contact name
-   - `message_body`: The message text that was sent
-   - `group_id`: NULL
-   - `timestamp`: Current timestamp in milliseconds
-   - `received_at`: Current datetime
-   - **Add a flag field** like `is_outgoing: true` or `message_direction: 'sent'` to distinguish sent vs received
+### 1. Add a `recipient` column to the messages table:
+```sql
+ALTER TABLE messages ADD COLUMN recipient TEXT;
+ALTER TABLE messages ADD COLUMN is_outgoing INTEGER DEFAULT 0;
+```
 
-### For Group Messages:
-1. Stores the sent message with:
-   - `sender_number`: My phone number (the Signal Controller's number)
-   - `sender_name`: My contact name or "Me"
-   - `message_body`: The message text
-   - `group_id`: The group ID from the "to" field
-   - `timestamp`: Current timestamp
-   - `received_at`: Current datetime
-   - `is_outgoing: true` or `message_direction: 'sent'`
+### 2. Modify the `/send` endpoint:
+When a message is sent, also store it in the database:
+- `sender_number`: MY phone number (Signal Controller's number)
+- `sender_name`: "Me" or my contact name
+- `recipient`: The "to" parameter (phone number or group_id)
+- `message_body`: The sent message text
+- `group_id`: Group ID if sending to group, NULL otherwise
+- `is_outgoing`: 1 (to mark as outgoing)
+- `timestamp`: Current timestamp
+- `received_at`: Current datetime
 
-## Key Point:
-**For individual chats:** Store the sent message AS IF it came FROM the recipient, so it appears in the same conversation thread. Add a flag to know it's actually outgoing.
+### 3. Add recipient filter to `/messages` endpoint:
+Support a new query parameter `recipient` to find messages sent TO someone:
+```
+GET /messages?recipient=+31612345678
+```
+This should return messages where `recipient = '+31612345678'` and `is_outgoing = 1`
 
-## Expected Behavior After Fix:
-- Send message to +31612345678
-- Message is sent via Signal ✓
-- Message is stored in DB with sender_number = "+31612345678" and is_outgoing = true ✓
-- GET `/messages?sender=+31612345678` returns BOTH received and sent messages ✓
-- The conversation shows a complete thread with sent and received messages together ✓
+### 4. Update conversation logic:
+When showing a conversation with contact `+31612345678`, the app will:
+- Get messages received: `GET /messages?sender=+31612345678`
+- Get messages sent: `GET /messages?recipient=+31612345678`
+- Merge them client-side
 
-## Database Schema Addition:
-Add a column to distinguish sent vs received messages:
-- `is_outgoing` BOOLEAN (0 = received, 1 = sent)
-- OR `message_direction` TEXT ('sent' or 'received')
+## Example Flow:
+1. I send "Hello" to `+31612345678`
+2. Database stores:
+   - sender_number: `+31681633847` (my number)
+   - recipient: `+31612345678`
+   - is_outgoing: `1`
+   - message_body: "Hello"
 
-Please modify the Signal Controller code to implement this functionality.
+3. When viewing chat with `+31612345678`:
+   - Fetch received: `/messages?sender=+31612345678`
+   - Fetch sent: `/messages?recipient=+31612345678`
+   - Both appear in the same conversation
+
+## For Groups:
+Group messages work the same way:
+- Store with `group_id` set
+- Store with `recipient` = group_id
+- `is_outgoing` = 1
+
+This way all messages (sent and received) in a group appear together.
+
+Please implement these changes to the Signal Controller.
+

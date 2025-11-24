@@ -33,13 +33,15 @@ class SignalAPIClient:
         """Get only group conversations."""
         return self._make_request('GET', '/groups')
     
-    def get_messages(self, sender=None, group_id=None):
+    def get_messages(self, sender=None, group_id=None, recipient=None):
         """Get messages with optional filters."""
         params = {}
         if sender:
             params['sender'] = sender
         if group_id:
             params['group_id'] = group_id
+        if recipient:
+            params['recipient'] = recipient
         
         return self._make_request('GET', '/messages', params=params)
     
