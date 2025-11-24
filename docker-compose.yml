@@ -32,6 +32,7 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=https://work-signal-api.janne.men
+      - REACT_APP_MY_NUMBER=+31681633847
       - DANGEROUSLY_DISABLE_HOST_CHECK=true
     volumes:
       - ./frontend:/app

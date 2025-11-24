@@ -49,7 +49,14 @@ function ChatView({ onRefresh }) {
   const loadMessages = async () => {
     try {
       const response = await signalAPI.getMessages({ contact: decodedContactId });
-      setMessages(response.data.messages || []);
+      const msgs = response.data.messages || [];
+      
+      // Debug: Log first message to see structure
+      if (msgs.length > 0) {
+        console.log('Sample message:', msgs[0]);
+      }
+      
+      setMessages(msgs);
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
@@ -138,9 +145,20 @@ function ChatView({ onRefresh }) {
         ) : (
           <List>
             {messages.map((msg, index) => {
-              const isSentByMe = msg.is_outgoing === 1 || msg.is_outgoing === true;
+              // Check multiple ways to identify sent messages
+              const myNumber = process.env.REACT_APP_MY_NUMBER || '+31681633847';
+              const isSentByMe = msg.is_outgoing === 1 || 
+                                msg.is_outgoing === true || 
+                                msg.sender_name === 'Me' ||
+                                (msg.sender_number && msg.sender_number === myNumber);
+              
               const prevMsg = index > 0 ? messages[index - 1] : null;
-              const prevIsSentByMe = prevMsg ? (prevMsg.is_outgoing === 1 || prevMsg.is_outgoing === true) : null;
+              const prevIsSentByMe = prevMsg ? (
+                prevMsg.is_outgoing === 1 || 
+                prevMsg.is_outgoing === true || 
+                prevMsg.sender_name === 'Me' ||
+                (prevMsg.sender_number && prevMsg.sender_number === myNumber)
+              ) : null;
               
               // Group messages by sender (or sent by me status)
               const isFirstInGroup = index === 0 || (isSentByMe !== prevIsSentByMe) || 
