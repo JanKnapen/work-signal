@@ -31,7 +31,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://192.168.68.63:8000
+      - REACT_APP_API_URL=https://work-signal-api.janne.men
     volumes:
       - ./frontend:/app
       - /app/node_modules
