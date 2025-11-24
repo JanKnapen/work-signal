@@ -51,9 +51,20 @@ function ChatView({ onRefresh }) {
       const response = await signalAPI.getMessages({ contact: decodedContactId });
       const msgs = response.data.messages || [];
       
-      // Debug: Log first message to see structure
+      // Debug: Log first few messages to see structure
       if (msgs.length > 0) {
-        console.log('Sample message:', msgs[0]);
+        console.log('First message structure:', {
+          id: msgs[0].id,
+          sender_number: msgs[0].sender_number,
+          sender_name: msgs[0].sender_name,
+          is_outgoing: msgs[0].is_outgoing,
+          message_body: msgs[0].message_body?.substring(0, 50)
+        });
+        
+        // Check if any messages have is_outgoing flag
+        const hasOutgoing = msgs.some(m => m.is_outgoing === 1 || m.is_outgoing === true);
+        console.log('Has outgoing flag:', hasOutgoing);
+        console.log('Total messages:', msgs.length);
       }
       
       setMessages(msgs);
@@ -147,17 +158,21 @@ function ChatView({ onRefresh }) {
             {messages.map((msg, index) => {
               // Check multiple ways to identify sent messages
               const myNumber = process.env.REACT_APP_MY_NUMBER || '+31681633847';
+              const myNumberShort = '0681633847'; // Dutch format without country code
+              
               const isSentByMe = msg.is_outgoing === 1 || 
                                 msg.is_outgoing === true || 
                                 msg.sender_name === 'Me' ||
-                                (msg.sender_number && msg.sender_number === myNumber);
+                                msg.sender_number === myNumber ||
+                                msg.sender_number === myNumberShort;
               
               const prevMsg = index > 0 ? messages[index - 1] : null;
               const prevIsSentByMe = prevMsg ? (
                 prevMsg.is_outgoing === 1 || 
                 prevMsg.is_outgoing === true || 
                 prevMsg.sender_name === 'Me' ||
-                (prevMsg.sender_number && prevMsg.sender_number === myNumber)
+                prevMsg.sender_number === myNumber ||
+                prevMsg.sender_number === myNumberShort
               ) : null;
               
               // Group messages by sender (or sent by me status)
