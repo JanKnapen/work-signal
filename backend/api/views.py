@@ -13,6 +13,20 @@ def conversations_list(request):
     try:
         client = SignalAPIClient()
         data = client.get_conversations()
+        
+        # Filter out conversations with yourself (sender_name == 'Me' or matches your number)
+        my_number = os.getenv('MY_SIGNAL_NUMBER', '+1234567890')
+        conversations = data.get('conversations', [])
+        
+        # Remove self-conversations
+        filtered_conversations = [
+            conv for conv in conversations
+            if conv.get('contact_name') != 'Me' and 
+               conv.get('contact_number') != my_number and
+               conv.get('sender_name') != 'Me'
+        ]
+        
+        data['conversations'] = filtered_conversations
         return Response(data)
     except Exception as e:
         return Response(
