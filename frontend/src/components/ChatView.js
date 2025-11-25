@@ -51,23 +51,18 @@ function ChatView({ onRefresh }) {
       const response = await signalAPI.getMessages({ contact: decodedContactId });
       const msgs = response.data.messages || [];
       
-      // Debug: Log first few messages to see structure
-      if (msgs.length > 0) {
-        console.log('First message structure:', {
-          id: msgs[0].id,
-          sender_number: msgs[0].sender_number,
-          sender_name: msgs[0].sender_name,
-          is_outgoing: msgs[0].is_outgoing,
-          message_body: msgs[0].message_body?.substring(0, 50)
-        });
-        
-        // Check if any messages have is_outgoing flag
-        const hasOutgoing = msgs.some(m => m.is_outgoing === 1 || m.is_outgoing === true);
-        console.log('Has outgoing flag:', hasOutgoing);
-        console.log('Total messages:', msgs.length);
+      // Filter out messages with empty or whitespace-only message_body
+      const validMessages = msgs.filter(msg => {
+        const body = msg.message_body;
+        return body && typeof body === 'string' && body.trim().length > 0;
+      });
+      
+      // Debug: Check if we filtered any messages
+      if (msgs.length !== validMessages.length) {
+        console.log(`Filtered out ${msgs.length - validMessages.length} empty messages`);
       }
       
-      setMessages(msgs);
+      setMessages(validMessages);
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
