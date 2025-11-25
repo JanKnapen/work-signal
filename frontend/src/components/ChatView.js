@@ -157,8 +157,8 @@ function ChatView({ onRefresh }) {
           <List>
             {messages.map((msg, index) => {
               // Check multiple ways to identify sent messages
-              const myNumber = process.env.REACT_APP_MY_NUMBER || '+31616293285';
-              const myNumberShort = '0616293285'; // Dutch format without country code
+              const myNumber = process.env.REACT_APP_MY_NUMBER || '+1234567890';
+              const myNumberShort = myNumber.replace(/^\+\d{2}/, '0'); // Convert +31612345678 to 0612345678
               
               const isSentByMe = msg.is_outgoing === 1 || 
                                 msg.is_outgoing === true || 

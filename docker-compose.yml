@@ -11,10 +11,10 @@ services:
     environment:
       - DEBUG=1
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - SIGNAL_API_URL=http://192.168.68.62:9000
+      - SIGNAL_API_URL=${SIGNAL_API_URL:-http://192.168.1.100:9000}
       - SIGNAL_API_KEY=${SIGNAL_API_KEY}
-      - ALLOWED_HOSTS=work-signal.janne.men,work-signal-api.janne.men,192.168.68.63,localhost,127.0.0.1
-      - CORS_ALLOWED_ORIGINS=https://work-signal.janne.men,http://192.168.68.63:3000,http://localhost:3000
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
     volumes:
       - ./backend:/app
       - backend_static:/app/staticfiles
@@ -31,8 +31,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=https://work-signal-api.janne.men
-      - REACT_APP_MY_NUMBER=${MY_SIGNAL_NUMBER:-+31616293285}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
+      - REACT_APP_MY_NUMBER=${MY_SIGNAL_NUMBER:-+1234567890}
       - DANGEROUSLY_DISABLE_HOST_CHECK=true
     volumes:
       - ./frontend:/app

@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .signal_client import SignalAPIClient
+import os
 
 
 @api_view(['GET'])
@@ -68,7 +69,10 @@ def messages_list(request):
                     print(f"Recipient filter not available: {e}")
                     # Fallback: Get all messages where sender is "Me" and filter by recipient
                     try:
-                        my_messages_data = client.get_messages(sender="+31616293285")
+                        # Get MY_SIGNAL_NUMBER from settings or use a default
+                        from django.conf import settings
+                        my_number = getattr(settings, 'MY_SIGNAL_NUMBER', os.getenv('MY_SIGNAL_NUMBER', '+1234567890'))
+                        my_messages_data = client.get_messages(sender=my_number)
                         my_messages = my_messages_data.get('messages', [])
                         # Filter for messages sent to this specific contact
                         sent_messages = [msg for msg in my_messages if msg.get('recipient') == contact]

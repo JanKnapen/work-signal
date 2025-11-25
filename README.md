@@ -17,7 +17,7 @@ A web-based Signal messaging interface built with Django, React, and Material UI
 
 - **Backend**: Django REST Framework (port 8000)
 - **Frontend**: React with Material UI (port 3000)
-- **Signal Controller**: Private API (192.168.68.62:9000)
+- **Signal Controller**: Private Signal API server
 
 ## Prerequisites
 
@@ -62,13 +62,13 @@ docker-compose exec backend python manage.py createsuperuser
 
 ### 5. Access the application
 
-- Frontend: http://192.168.68.63:3000
-- Backend API: http://192.168.68.63:8000
-- Django Admin: http://192.168.68.63:8000/admin
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- Django Admin: http://localhost:8000/admin
 
 ## Usage
 
-1. Navigate to http://192.168.68.63:3000
+1. Navigate to http://localhost:3000
 2. Log in with your Django superuser credentials
 3. View your conversations in the left sidebar
 4. Click on a conversation to open the chat
@@ -118,7 +118,7 @@ npm start
 
 ## Deployment
 
-The application is designed to run on Ubuntu VM at 192.168.68.63 using Docker Compose.
+The application is designed to run using Docker Compose. Configure your environment variables in `.env` based on `.env.example`.
 
 ## Security Notes
 
@@ -132,6 +132,6 @@ The application is designed to run on Ubuntu VM at 192.168.68.63 using Docker Co
 
 MIT
 
-## Author
+## Contributing
 
-Your Name
+Contributions are welcome! Please feel free to submit a Pull Request.
