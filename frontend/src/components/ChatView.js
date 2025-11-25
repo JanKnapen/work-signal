@@ -70,11 +70,6 @@ function ChatView({ onRefresh }) {
         return body && typeof body === 'string' && body.trim().length > 0;
       });
       
-      // Debug: Check if we filtered any messages
-      if (msgs.length !== validMessages.length) {
-        console.log(`Filtered out ${msgs.length - validMessages.length} empty messages`);
-      }
-      
       setMessages(validMessages);
       setError(null); // Clear any previous errors
     } catch (error) {
