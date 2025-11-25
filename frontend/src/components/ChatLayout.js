@@ -117,6 +117,12 @@ function ChatLayout() {
     const lastRead = lastReadMessages[conv.contact_number] || 0;
     const totalMessages = conv.message_count || 0;
     const unread = totalMessages - lastRead;
+    
+    // Debug logging
+    if (unread > 0) {
+      console.log(`Unread for ${conv.contact_name}: total=${totalMessages}, lastRead=${lastRead}, unread=${unread}`);
+    }
+    
     return unread > 0 ? unread : 0;
   };
 
