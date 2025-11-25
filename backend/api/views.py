@@ -63,14 +63,19 @@ def messages_list(request):
                 try:
                     sent_data = client.get_messages(recipient=contact)
                     sent_messages = sent_data.get('messages', [])
-                except:
-                    # If recipient filter not available, get all messages and filter
-                    # by checking if we sent to this contact
-                    all_data = client.get_messages()
-                    all_messages = all_data.get('messages', [])
-                    # Filter for messages where we are the sender and contact is recipient
-                    # This is a workaround - ideally Signal Controller should support recipient filter
-                    sent_messages = []
+                    print(f"Found {len(sent_messages)} sent messages using recipient filter")
+                except Exception as e:
+                    print(f"Recipient filter not available: {e}")
+                    # Fallback: Get all messages where sender is "Me" and filter by recipient
+                    try:
+                        my_messages_data = client.get_messages(sender="+31616293285")
+                        my_messages = my_messages_data.get('messages', [])
+                        # Filter for messages sent to this specific contact
+                        sent_messages = [msg for msg in my_messages if msg.get('recipient') == contact]
+                        print(f"Found {len(sent_messages)} sent messages using fallback filter")
+                    except Exception as e2:
+                        print(f"Fallback also failed: {e2}")
+                        sent_messages = []
                 
                 # Combine and sort by timestamp, remove duplicates
                 # Use a set to track unique message IDs
