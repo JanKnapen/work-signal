@@ -12,6 +12,8 @@ import {
   Avatar,
   Chip,
   Divider,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -28,6 +30,7 @@ function ChatView({ onRefresh }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [contactInfo, setContactInfo] = useState(null);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -63,8 +66,11 @@ function ChatView({ onRefresh }) {
       }
       
       setMessages(validMessages);
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Failed to load messages:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to load messages';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -74,8 +80,11 @@ function ChatView({ onRefresh }) {
     try {
       const response = await signalAPI.getContactProfile(decodedContactId);
       setContactInfo(response.data);
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Failed to load contact info:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to load contact info';
+      setError(errorMsg);
     }
   };
 
@@ -89,9 +98,11 @@ function ChatView({ onRefresh }) {
       setNewMessage('');
       await loadMessages();
       if (onRefresh) onRefresh();
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('Failed to send message. Please try again.');
+      const errorMsg = error.response?.data?.error || 'Failed to send message. Please try again.';
+      setError(errorMsg);
     } finally {
       setSending(false);
     }
@@ -246,6 +257,18 @@ function ChatView({ onRefresh }) {
           </Box>
         </form>
       </Paper>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

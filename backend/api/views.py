@@ -221,11 +221,15 @@ def contact_profile(request):
                 contact_info = conv
                 break
         
+        # If contact not found in existing conversations, create a basic profile
+        # This allows starting new conversations with contacts you haven't messaged before
         if not contact_info:
-            return Response(
-                {"error": "Contact not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            contact_info = {
+                'contact_number': contact,
+                'contact_name': contact,  # Use number as name if no conversation exists
+                'is_group': False,
+                'last_message_at': None,
+            }
         
         # Get message count for this contact
         if contact_info.get('is_group'):
