@@ -112,13 +112,20 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = os.getenv(
+cors_origins = os.getenv(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:3000,http://127.0.0.1:3000'
-).split(',')
+)
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Additional CORS settings for development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
+    print(f"DEBUG: CORS allowed origins: {CORS_ALLOWED_ORIGINS}")
+    print(f"DEBUG: Allowed hosts: {ALLOWED_HOSTS}")
+
 # Signal API settings
-SIGNAL_API_URL = os.getenv('SIGNAL_API_URL', 'http://192.168.68.62:9000')
+SIGNAL_API_URL = os.getenv('SIGNAL_API_URL', 'http://192.168.1.100:9000')
 SIGNAL_API_KEY = os.getenv('SIGNAL_API_KEY', '')
