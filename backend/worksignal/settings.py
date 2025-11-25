@@ -120,6 +120,24 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if 
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Additional CORS headers needed for Cloudflare Tunnel
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-csrftoken',
+]
+
 # Debug logging
 if DEBUG:
     print(f"DEBUG: CORS allowed origins: {CORS_ALLOWED_ORIGINS}")
