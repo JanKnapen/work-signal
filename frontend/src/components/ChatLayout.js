@@ -38,9 +38,22 @@ function ChatLayout() {
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
+  const [lastReadMessages, setLastReadMessages] = useState({});
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const { contactId } = useParams();
+
+  // Load last read messages from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('lastReadMessages');
+    if (stored) {
+      try {
+        setLastReadMessages(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse lastReadMessages:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     loadConversations();
@@ -65,7 +78,17 @@ function ChatLayout() {
   };
 
   const handleConversationClick = (contact) => {
-    navigate(`/chat/${encodeURIComponent(contact.contact_number)}`);
+    const contactNumber = contact.contact_number;
+    
+    // Mark conversation as read by storing the current message count
+    const newLastRead = {
+      ...lastReadMessages,
+      [contactNumber]: contact.message_count || 0
+    };
+    setLastReadMessages(newLastRead);
+    localStorage.setItem('lastReadMessages', JSON.stringify(newLastRead));
+    
+    navigate(`/chat/${encodeURIComponent(contactNumber)}`);
     if (mobileOpen) {
       setMobileOpen(false);
     }
@@ -77,8 +100,24 @@ function ChatLayout() {
   };
 
   const handleNewChat = (contactNumber) => {
+    // Mark new chat as read immediately
+    const newLastRead = {
+      ...lastReadMessages,
+      [contactNumber]: 0
+    };
+    setLastReadMessages(newLastRead);
+    localStorage.setItem('lastReadMessages', JSON.stringify(newLastRead));
+    
     navigate(`/chat/${encodeURIComponent(contactNumber)}`);
     setNewChatOpen(false);
+  };
+
+  // Calculate unread count for a conversation
+  const getUnreadCount = (conv) => {
+    const lastRead = lastReadMessages[conv.contact_number] || 0;
+    const totalMessages = conv.message_count || 0;
+    const unread = totalMessages - lastRead;
+    return unread > 0 ? unread : 0;
   };
 
   const drawer = (
@@ -99,31 +138,34 @@ function ChatLayout() {
         </Box>
       ) : (
         <List>
-          {conversations.map((conv) => (
-            <ListItem key={conv.id} disablePadding>
-              <ListItemButton
-                selected={contactId === encodeURIComponent(conv.contact_number)}
-                onClick={() => handleConversationClick(conv)}
-              >
-                <ListItemAvatar>
-                  <Avatar>
-                    {conv.is_group ? <GroupIcon /> : <PersonIcon />}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={conv.contact_name || conv.contact_number}
-                  secondary={
-                    conv.last_message_at
-                      ? new Date(conv.last_message_at).toLocaleString()
-                      : 'No messages'
-                  }
-                />
-                {conv.message_count > 0 && (
-                  <Badge badgeContent={conv.message_count} color="primary" />
-                )}
-              </ListItemButton>
-            </ListItem>
-          ))}
+          {conversations.map((conv) => {
+            const unreadCount = getUnreadCount(conv);
+            return (
+              <ListItem key={conv.id} disablePadding>
+                <ListItemButton
+                  selected={contactId === encodeURIComponent(conv.contact_number)}
+                  onClick={() => handleConversationClick(conv)}
+                >
+                  <ListItemAvatar>
+                    <Avatar>
+                      {conv.is_group ? <GroupIcon /> : <PersonIcon />}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={conv.contact_name || conv.contact_number}
+                    secondary={
+                      conv.last_message_at
+                        ? new Date(conv.last_message_at).toLocaleString()
+                        : 'No messages'
+                    }
+                  />
+                  {unreadCount > 0 && (
+                    <Badge badgeContent={unreadCount} color="primary" />
+                  )}
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
           {conversations.length === 0 && (
             <ListItem>
               <ListItemText

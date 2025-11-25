@@ -41,6 +41,16 @@ function ChatView({ onRefresh }) {
     return () => clearInterval(interval);
   }, [contactId]);
 
+  // Mark messages as read when viewing the chat
+  useEffect(() => {
+    if (contactInfo && messages.length > 0) {
+      const stored = localStorage.getItem('lastReadMessages');
+      const lastRead = stored ? JSON.parse(stored) : {};
+      lastRead[decodedContactId] = contactInfo.message_count || messages.length;
+      localStorage.setItem('lastReadMessages', JSON.stringify(lastRead));
+    }
+  }, [messages.length, contactInfo, decodedContactId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
